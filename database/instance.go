@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"sync"
 )
 
@@ -53,19 +52,35 @@ func (instance *Instance) Run(wg *sync.WaitGroup, ctx context.Context, cancel co
 		}
 
 		switch instance.getState() {
-		case StateTerminating:
-			instance.setState(StateTerminated)
-		case StateStarting:
-			instance.setState(StateRunning)
-			fmt.Println("State set to running")
-		case StateRunning:
-			println("State is running")
 		default:
 			panic("unhandled default case")
+		case StateStarting:
+			instance.handleStateStarting()
+		case StateRunning:
+			instance.handleStateRunning()
+		case StateTerminating:
+			instance.handleStateTerminating()
 		}
 	}
 
 	println("Terminated")
 
 	return nil
+}
+
+// handleStateStarting - handles the starting state of the database instance
+func (instance *Instance) handleStateStarting() {
+	println("State is starting")
+	instance.setState(StateRunning)
+}
+
+// handleStateRunning - handles the running state of the database instance
+func (instance *Instance) handleStateRunning() {
+	println("State is running")
+}
+
+// handleStateTerminating - handles the terminating state of the database instance
+func (instance *Instance) handleStateTerminating() {
+	println("State is terminating")
+	instance.setState(StateTerminated)
 }
