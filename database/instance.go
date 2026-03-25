@@ -10,6 +10,7 @@ const (
 	StateRunning
 	StateTerminating
 	StateTerminated
+	stateContextError
 )
 
 type Instance struct {
@@ -47,9 +48,7 @@ func (instance *Instance) Run(wg *sync.WaitGroup, ctx context.Context, cancel co
 	defer wg.Done()
 
 	for !instance.hasState(StateTerminated) {
-		if ctx.Err() != nil {
-			instance.setState(StateTerminating)
-		}
+		instance.handleContextError(ctx)
 
 		switch instance.getState() {
 		default:
@@ -62,8 +61,6 @@ func (instance *Instance) Run(wg *sync.WaitGroup, ctx context.Context, cancel co
 			instance.handleStateTerminating()
 		}
 	}
-
-	println("Terminated")
 
 	return nil
 }
@@ -83,4 +80,18 @@ func (instance *Instance) handleStateRunning() {
 func (instance *Instance) handleStateTerminating() {
 	println("State is terminating")
 	instance.setState(StateTerminated)
+}
+
+// handleContextError - transitions the instance state when the context is done
+func (instance *Instance) handleContextError(ctx context.Context) {
+	if ctx.Err() == nil {
+		return
+	}
+
+	switch ctx.Err() {
+	case context.Canceled, context.DeadlineExceeded:
+		instance.setState(StateTerminating)
+	default:
+		instance.setState(stateContextError)
+	}
 }
