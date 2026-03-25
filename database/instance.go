@@ -35,11 +35,19 @@ func (instance *Instance) getState() int {
 	return instance.state
 }
 
+// hasState - checks if the database instance has the given state
+func (instance *Instance) hasState(state int) bool {
+	instance.stateMutex.RLock()
+	defer instance.stateMutex.RUnlock()
+
+	return instance.state == state
+}
+
 // Run - runs the database instance
 func (instance *Instance) Run(wg *sync.WaitGroup, ctx context.Context, cancel context.CancelFunc) error {
 	defer wg.Done()
 
-	for instance.getState() != StateTerminated {
+	for !instance.hasState(StateTerminated) {
 		if ctx.Err() != nil {
 			instance.setState(StateTerminating)
 		}
