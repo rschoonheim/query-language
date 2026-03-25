@@ -2,6 +2,7 @@ package database
 
 // Configuration - holds the configuration for the database
 type Configuration struct {
+	Name string `yaml:"name"`
 }
 
 // Load - loads the configuration for the database

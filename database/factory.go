@@ -1,27 +1,29 @@
 package database
 
+import (
+	"sync"
+
+	"gopkg.in/yaml.v3"
+)
+
 // New - creates a new database instance
 func New(configuration *Configuration) *Instance {
 	return &Instance{
 		configuration: configuration,
+		state:         StateStarting,
+		stateMutex:    sync.RWMutex{},
 	}
 }
 
-// ConfigurationNew - creates a new database configuration
-func ConfigurationNew() *Configuration {
+// ConfigurationFromYaml - creates a new database configuration from yaml bytes
+func ConfigurationFromYaml(configurationBytes []byte) (*Configuration, error) {
 
-	// Instance initialization.
-	//
-	instance := Configuration{}
-	instance.Load()
+	var configuration Configuration
 
-	// Ensure the configuration is valid before
-	// returning the instance.
-	//
-	err := instance.Validate()
+	err := yaml.Unmarshal(configurationBytes, &configuration)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return &instance
+	return &configuration, nil
 }
